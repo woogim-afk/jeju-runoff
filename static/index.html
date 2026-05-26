@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주도 옥상 우수량 산정기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.8.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#f0f2f0;min-height:100vh;padding:20px;}
+.container{max-width:780px;margin:0 auto;}
+.app-header{background:#085041;color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.app-header h1{font-size:17px;font-weight:500;}
+.app-header p{font-size:12px;opacity:.75;margin-top:3px;}
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.card.wall-card{border-color:#b5d4f4;}
+.slabel{font-size:12px;font-weight:500;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.slabel-note{font-weight:400;font-size:11px;color:#999;}
+table.rt{width:100%;border-collapse:collapse;}
+table.rt th{font-size:11px;color:#aaa;font-weight:400;padding:0 6px 8px;border-bottom:1px solid #f0f0f0;}
+table.rt th:first-child{text-align:left;}table.rt th:not(:first-child){text-align:right;}
+table.rt td{padding:7px 6px;border-bottom:1px solid #f5f5f5;vertical-align:middle;}
+table.rt tr:last-child td{border-bottom:none;}
+.rt-name{font-size:13px;color:#222;}
+.rt-desc{font-size:10px;color:#aaa;margin-top:1px;}
+.c-badge{display:inline-block;background:#f5f5f5;border-radius:5px;padding:2px 7px;font-size:12px;font-weight:500;color:#333;}
+input[type=number]{padding:6px 8px;border:1px solid #ddd;border-radius:7px;font-size:13px;color:#222;background:#fafafa;outline:none;transition:border .15s;}
+input[type=number]:focus{border-color:#1D9E75;background:#fff;}
+.area-in{width:100px;text-align:right;}
+.area-unit{font-size:11px;color:#aaa;}
+.total-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 0 0;font-size:12px;color:#777;flex-wrap:wrap;gap:6px;border-top:1px solid #f0f0f0;margin-top:8px;}
+.total-val{font-size:15px;font-weight:600;color:#222;}
+.cw-badge{background:#e1f5ee;color:#085041;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{padding:6px 12px;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;cursor:pointer;background:#fff;color:#666;transition:all .15s;line-height:1.4;text-align:left;}
+.chip .cs{display:block;font-size:10px;opacity:.65;margin-top:1px;}
+.chip:hover{border-color:#1D9E75;color:#1D9E75;}
+.chip.active{background:#085041;border-color:#085041;color:#9fe1cb;}
+.chip.rec{border-color:#1D9E75;}
+.chip.rec::after{content:'권장';font-size:9px;background:#e1f5ee;color:#0F6E56;border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:1px;}
+.chip.active.rec::after{background:rgba(255,255,255,.15);color:#9fe1cb;}
+.hint{font-size:11px;color:#1D9E75;margin-top:5px;min-height:15px;}
+.divider{border:none;border-top:1px solid #f0f0f0;margin:.75rem 0;}
+/* 벽면 토글 */
+.wall-toggle{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.toggle-btn{width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .2s;background:#ccc;}
+.toggle-btn.on{background:#1D9E75;}
+.toggle-btn::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle-btn.on::after{left:21px;}
+.toggle-label{font-size:13px;font-weight:500;color:#222;}
+.wall-body{display:none;}
+.wall-body.visible{display:block;}
+.wall-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.wi-label{font-size:11px;color:#777;margin-bottom:4px;display:block;}
+.wi-row{display:flex;align-items:center;gap:5px;}
+.wi-in{width:100%;text-align:right;font-size:13px;}
+.wi-unit{font-size:11px;color:#aaa;white-space:nowrap;}
+.wi-hint{font-size:10px;color:#bbb;margin-top:2px;}
+.exp-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.exp-chip{padding:5px 10px;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;cursor:pointer;background:#fff;color:#666;transition:all .15s;line-height:1.4;}
+.exp-chip.active{background:#185fa5;border-color:#185fa5;color:#fff;}
+.wall-result{background:#e6f1fb;border-radius:8px;padding:10px 14px;font-size:12px;color:#185fa5;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.wall-result-val{font-size:16px;font-weight:600;color:#0c447c;}
+/* 결과 */
+.section-title{font-size:13px;font-weight:600;color:#444;margin:0 0 10px;}
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.rcard{background:#f7f7f7;border-radius:8px;padding:12px 14px;}
+.rl{font-size:11px;color:#888;margin-bottom:4px;}
+.rv{font-size:20px;font-weight:600;color:#222;}
+.ru{font-size:11px;color:#aaa;margin-top:1px;}
+.rcard.main .rv{color:#085041;}
+.breakdown{background:#f7f7f7;border-radius:8px;padding:12px 14px;margin-bottom:12px;}
+.bd-label{font-size:11px;color:#888;margin-bottom:7px;}
+.bd-bar{height:18px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:6px;background:#e0e0e0;}
+.bd-roof{background:#1D9E75;transition:width .3s;}
+.bd-wall{background:#378ADD;transition:width .3s;}
+.bd-legend{display:flex;gap:14px;font-size:11px;color:#888;}
+.bd-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:1px;}
+/* 배관 탭 */
+.sys-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;}
+.sys-tab{border:1px solid #e0e0e0;border-radius:10px;padding:10px 13px;cursor:pointer;background:#fff;text-align:left;transition:all .15s;}
+.sys-tab:hover{border-color:#1D9E75;}
+.sys-tab.active{border-color:#1D9E75;background:#e1f5ee;}
+.sys-tab.active .st-name{color:#085041;}
+.sys-tab.active .st-badge{background:#085041;color:#9fe1cb;}
+.st-name{font-size:13px;font-weight:500;color:#222;margin-bottom:2px;}
+.st-desc{font-size:11px;color:#888;line-height:1.4;}
+.st-badge{display:inline-block;font-size:10px;border-radius:4px;padding:1px 6px;margin-bottom:4px;background:#f0f0f0;color:#777;}
+.cond-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cond-section{display:none;}
+.cond-section.visible{display:block;}
+/* 관경표 */
+table.pt{width:100%;border-collapse:collapse;font-size:12px;}
+table.pt th{font-size:11px;color:#aaa;font-weight:400;padding:0 8px 8px;border-bottom:1px solid #f0f0f0;text-align:right;}
+table.pt th:first-child{text-align:left;}
+table.pt td{padding:9px 8px;border-bottom:1px solid #f5f5f5;text-align:right;color:#222;vertical-align:middle;}
+table.pt td:first-child{text-align:left;font-weight:500;}
+table.pt tr:last-child td{border-bottom:none;}
+table.pt tr{cursor:pointer;transition:background .1s;}
+table.pt tr:hover td{background:#f5f5f5;}
+table.pt tr.selected td{background:#e1f5ee;}
+table.pt tr.selected td:first-child{color:#085041;}
+.count-big{font-size:16px;font-weight:600;color:#085041;}
+.count-warn{font-size:16px;font-weight:600;color:#993c1d;}
+.tag{display:inline-block;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:500;}
+.tag-1ok{background:#e1f5ee;color:#085041;}
+.tag-ok{background:#f5f5f5;color:#888;}
+.tag-multi{background:#faeeda;color:#633806;}
+.sel-box{background:#f7f7f7;border-radius:8px;padding:12px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.si-l{font-size:11px;color:#888;margin-bottom:3px;}
+.si-v{font-size:15px;font-weight:600;color:#222;}
+.si-v.accent{color:#085041;font-size:20px;}
+.si-v.warn{color:#993c1d;font-size:20px;}
+.sel-warn{font-size:11px;color:#ba7517;background:#faeeda;border-radius:8px;padding:7px 11px;margin-bottom:12px;}
+.mixed-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mixed-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:13px 14px;}
+.mixed-card h3{font-size:12px;font-weight:500;color:#777;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}
+.info-box{background:#e6f1fb;border-radius:8px;padding:8px 12px;font-size:11px;color:#185fa5;margin-bottom:8px;line-height:1.6;}
+.formula{background:#f7f7f7;border-radius:8px;padding:10px 14px;font-size:11px;color:#888;display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
+.formula code{font-family:'Courier New',monospace;font-size:11px;color:#222;}
+.empty-warn{font-size:12px;color:#aaa;text-align:center;padding:8px 0;}
+.note{font-size:11px;color:#bbb;line-height:1.7;margin-top:12px;padding:10px 14px;background:#f9f9f9;border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="app-header">
+  <i class="ti ti-building" style="font-size:28px;"></i>
+  <div>
+    <h1>제주도 옥상 우수량 산정기</h1>
+    <p>합리식 · 지붕유형별 면적 · 벽면 우수 포함 · 배관방식별 관경·개수 산정</p>
+  </div>
+</div>
+
+<!-- 지붕 유형 -->
+<div class="card">
+  <div class="slabel"><i class="ti ti-home-2" style="font-size:14px;"></i>지붕 유형별 면적 <span class="slabel-note">— 소수점 둘째 자리, 해당 없으면 빈칸</span></div>
+  <table class="rt"><thead><tr><th>유형</th><th style="text-align:center;">C값</th><th style="text-align:right;">면적 (㎡)</th></tr></thead><tbody id="roof-tbody"></tbody></table>
+  <div class="total-bar">
+    <div>옥상 합계&nbsp;<span class="total-val" id="tot-area">0.00 ㎡</span></div>
+    <div style="display:flex;align-items:center;gap:6px;">가중 유출계수 <span class="cw-badge" id="tot-c">—</span></div>
+  </div>
+</div>
+
+<!-- 벽면 우수 -->
+<div class="card wall-card">
+  <div class="wall-toggle">
+    <button class="toggle-btn" id="wall-toggle" onclick="toggleWall()"></button>
+    <span class="toggle-label"><i class="ti ti-building-skyscraper" style="font-size:14px;vertical-align:-2px;margin-right:4px;color:#378ADD;"></i>상층 벽면 우수 포함</span>
+    <span style="font-size:11px;color:#bbb;">— 2층 옥상으로 유입되는 상층 외벽 우수</span>
+  </div>
+  <div class="wall-body" id="wall-body">
+    <div class="wall-grid">
+      <div>
+        <span class="wi-label">벽면 높이 (상층부)</span>
+        <div class="wi-row"><input type="number" class="wi-in" id="wall-h" value="48" min="0" step="0.1" placeholder="0.0" oninput="update()"><span class="wi-unit">m</span></div>
+        <div class="wi-hint">예: 3~18층 → 16×3m = 48m</div>
+      </div>
+      <div>
+        <span class="wi-label">옥상에 면한 벽 둘레</span>
+        <div class="wi-row"><input type="number" class="wi-in" id="wall-p" value="0" min="0" step="0.1" placeholder="0.0" oninput="update()"><span class="wi-unit">m</span></div>
+        <div class="wi-hint">2층 옥상 경계 상층 외벽 길이</div>
+      </div>
+      <div>
+        <span class="wi-label">벽면 유출계수 C</span>
+        <div class="wi-row"><input type="number" class="wi-in" id="wall-c" value="0.80" min="0" max="1" step="0.01" placeholder="0.80" oninput="update()"></div>
+        <div class="wi-hint">커튼월 0.80, 벽돌 0.65</div>
+      </div>
+    </div>
+    <div class="slabel" style="margin-bottom:6px;">빗물 노출 방향 <span class="slabel-note">— 유효노출비율 결정</span></div>
+    <div class="exp-chips" id="exp-chips">
+      <button class="exp-chip active" onclick="selExp(this,0.25)">1면 노출<span style="display:block;font-size:10px;opacity:.7;">비율 0.25</span></button>
+      <button class="exp-chip" onclick="selExp(this,0.50)">2면/사방 균등<span style="display:block;font-size:10px;opacity:.7;">비율 0.50</span></button>
+      <button class="exp-chip" onclick="selExp(this,0.75)">3면 노출<span style="display:block;font-size:10px;opacity:.7;">비율 0.75</span></button>
+      <button class="exp-chip" onclick="selExp(this,1.00)">독립 타워<span style="display:block;font-size:10px;opacity:.7;">비율 1.00</span></button>
+    </div>
+    <div class="wall-result">
+      <div>
+        <div style="font-size:11px;margin-bottom:2px;">유효집수면적 = 높이 × 둘레 × 노출비율</div>
+        <div style="font-size:11px;" id="wall-formula-text">— × — × — = —</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;margin-bottom:2px;">벽면 유효면적</div>
+        <div class="wall-result-val" id="wall-eff-area">— ㎡</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 설계빈도 -->
+<div class="card">
+  <div class="slabel"><i class="ti ti-shield-check" style="font-size:14px;"></i>건물 용도 <span class="slabel-note">— 설계빈도 자동 결정</span></div>
+  <div class="chips" id="use-chips">
+    <button class="chip" onclick="selUse(this,'10')">소규모 주거<span class="cs">설계빈도 10년</span></button>
+    <button class="chip active" onclick="selUse(this,'30')">일반 건축물<span class="cs">설계빈도 30년 · 제주 기본</span></button>
+    <button class="chip" onclick="selUse(this,'50')">공공·상업시설<span class="cs">설계빈도 50년</span></button>
+    <button class="chip" onclick="selUse(this,'100')">특수·지하 연결부<span class="cs">설계빈도 100년</span></button>
+  </div>
+</div>
+
+<!-- 지속시간 -->
+<div class="card">
+  <div class="slabel"><i class="ti ti-clock" style="font-size:14px;"></i>강우 지속시간 <span class="slabel-note">— 합계 면적 기준 자동 추천</span></div>
+  <div class="chips" id="dur-chips">
+    <button class="chip" onclick="selDur(this,5)" data-dur="5">5분<span class="cs">~500㎡</span></button>
+    <button class="chip" onclick="selDur(this,10)" data-dur="10">10분<span class="cs">500~2,000㎡</span></button>
+    <button class="chip" onclick="selDur(this,15)" data-dur="15">15분<span class="cs">2,000~5,000㎡</span></button>
+    <button class="chip" onclick="selDur(this,30)" data-dur="30">30분<span class="cs">5,000㎡~</span></button>
+  </div>
+  <div class="hint" id="dur-hint"></div>
+</div>
+
+<hr class="divider">
+<div class="section-title">산정 결과</div>
+<div id="empty-msg" class="empty-warn" style="display:none;"><i class="ti ti-alert-circle"></i> 면적을 1개 이상 입력하세요</div>
+
+<div id="result-wrap">
+  <div class="res-grid">
+    <div class="rcard main"><div class="rl">총 첨두유량 Q</div><div class="rv" id="rq">—</div><div class="ru">m³/s</div></div>
+    <div class="rcard"><div class="rl">총 첨두유량 Q</div><div class="rv" id="rls">—</div><div class="ru">L/s</div></div>
+    <div class="rcard"><div class="rl">강우강도 I</div><div class="rv" id="ri">—</div><div class="ru">mm/hr</div></div>
+  </div>
+  <div class="breakdown" id="breakdown-box" style="display:none;">
+    <div class="bd-label">유량 구성 — 옥상 vs 벽면</div>
+    <div class="bd-bar"><div class="bd-roof" id="bd-roof-bar" style="width:100%;"></div><div class="bd-wall" id="bd-wall-bar" style="width:0%;"></div></div>
+    <div class="bd-legend">
+      <span><span class="bd-dot" style="background:#1D9E75;"></span>옥상 <span id="bd-roof-pct">—</span> (<span id="bd-roof-ls">—</span> L/s)</span>
+      <span><span class="bd-dot" style="background:#378ADD;"></span>벽면 <span id="bd-wall-pct">—</span> (<span id="bd-wall-ls">—</span> L/s)</span>
+    </div>
+  </div>
+  <div class="formula">
+    <div><span style="display:block;margin-bottom:2px;">강우강도식 (Talbot)</span><code id="fi">—</code></div>
+    <div><span style="display:block;margin-bottom:2px;">합리식</span><code>Q=(1/360)×I×[Σ(Ci×Ai)+Cw×Aw]/10000</code></div>
+  </div>
+
+  <hr class="divider">
+  <div class="section-title">배관 방식 선택</div>
+  <div class="sys-tabs">
+    <button class="sys-tab active" onclick="selSys(this,'vertical')"><span class="st-badge">수직 낙하</span><div class="st-name"><i class="ti ti-arrow-down" style="font-size:13px;"></i> 수직 낙수관 (선홈통)</div><div class="st-desc">경사 불필요. 부분흐름 기준 용량.</div></button>
+    <button class="sys-tab" onclick="selSys(this,'horizontal')"><span class="st-badge">경사 수평관</span><div class="st-name"><i class="ti ti-arrow-right" style="font-size:13px;"></i> 수평 경사관</div><div class="st-desc">Manning 공식 적용.</div></button>
+    <button class="sys-tab" onclick="selSys(this,'mixed')"><span class="st-badge">혼합</span><div class="st-name"><i class="ti ti-git-branch" style="font-size:13px;"></i> 수평 연결관 + 수직관</div><div class="st-desc">가장 일반적인 방식.</div></button>
+    <button class="sys-tab" onclick="selSys(this,'bent')"><span class="st-badge">꺾임</span><div class="st-name"><i class="ti ti-arrows-down-up" style="font-size:13px;"></i> 꺾임 수직관</div><div class="st-desc">유속 충격 완화. 수직관 동일 용량.</div></button>
+  </div>
+
+  <div class="cond-section visible" id="sec-vertical">
+    <div class="info-box">수직 낙수관 — 경사 불필요, 부분 흐름(만관 1/3) 기준. 모든 관경 클릭으로 선택.</div>
+    <div class="card" style="padding:.875rem 1rem;"><table class="pt"><thead><tr><th>관경</th><th>1개 용량<br><span style="font-size:9px;">(L/s)</span></th><th>필요 개수<br><span style="font-size:9px;">(개)</span></th><th>여유율<br><span style="font-size:9px;">(%)</span></th><th>비고</th></tr></thead><tbody id="pt-v"></tbody></table></div>
+    <div id="warn-v" class="sel-warn" style="display:none;"></div>
+    <div class="sel-box"><div><div class="si-l">선택 관경</div><div class="si-v" id="sv-d">—</div></div><div><div class="si-l">1개 용량</div><div class="si-v" id="sv-q">—</div></div><div><div class="si-l">필요 개수</div><div class="si-v accent" id="sv-n">—</div></div><div><div class="si-l">여유율</div><div class="si-v" id="sv-m">—</div></div></div>
+  </div>
+
+  <div class="cond-section" id="sec-horizontal">
+    <div class="info-box">수평 경사관 — Manning 공식 적용. 재질·경사 선택 후 모든 관경 클릭 비교 가능.</div>
+    <div class="card" style="padding:.875rem 1rem;">
+      <div class="cond-row" style="margin-bottom:10px;">
+        <div><div class="slabel" style="margin-bottom:5px;">관 재질</div><div class="chips" id="mat-h"><button class="chip active" onclick="selMat(this,'h',0.010)">PVC관<span class="cs">n=0.010</span></button><button class="chip" onclick="selMat(this,'h',0.012)">주철관<span class="cs">n=0.012</span></button><button class="chip" onclick="selMat(this,'h',0.013)">콘크리트<span class="cs">n=0.013</span></button></div></div>
+        <div><div class="slabel" style="margin-bottom:5px;">관로 경사</div><div class="chips" id="slope-h"><button class="chip" onclick="selSlope(this,'h',0.005)">1/200<span class="cs">0.5%</span></button><button class="chip active" onclick="selSlope(this,'h',0.010)">1/100<span class="cs">1.0%</span></button><button class="chip" onclick="selSlope(this,'h',0.020)">1/50<span class="cs">2.0%</span></button><button class="chip" onclick="selSlope(this,'h',0.030)">1/33<span class="cs">3.0%</span></button></div></div>
+      </div>
+      <table class="pt"><thead><tr><th>관경</th><th>1개 용량<br><span style="font-size:9px;">(L/s)</span></th><th>필요 개수<br><span style="font-size:9px;">(개)</span></th><th>여유율<br><span style="font-size:9px;">(%)</span></th><th>비고</th></tr></thead><tbody id="pt-h"></tbody></table>
+    </div>
+    <div id="warn-h" class="sel-warn" style="display:none;"></div>
+    <div class="sel-box"><div><div class="si-l">선택 관경</div><div class="si-v" id="sh-d">—</div></div><div><div class="si-l">1개 용량</div><div class="si-v" id="sh-q">—</div></div><div><div class="si-l">필요 개수</div><div class="si-v accent" id="sh-n">—</div></div><div><div class="si-l">여유율</div><div class="si-v" id="sh-m">—</div></div></div>
+  </div>
+
+  <div class="cond-section" id="sec-mixed">
+    <div class="info-box">수평 연결관(Manning) + 수직 낙수관(용량표) 각각 산정. 연결관 ≤ 수직관 관경 권장.</div>
+    <div class="mixed-grid">
+      <div class="mixed-card"><h3>↔ 수평 연결관</h3>
+        <div class="slabel" style="margin-bottom:5px;font-size:11px;">재질</div><div class="chips" style="margin-bottom:8px;" id="mat-m"><button class="chip active" onclick="selMat(this,'m',0.010)">PVC<span class="cs">n=0.010</span></button><button class="chip" onclick="selMat(this,'m',0.012)">주철<span class="cs">n=0.012</span></button></div>
+        <div class="slabel" style="margin-bottom:5px;font-size:11px;">경사</div><div class="chips" style="margin-bottom:8px;" id="slope-m"><button class="chip" onclick="selSlope(this,'m',0.010)">1/100</button><button class="chip active" onclick="selSlope(this,'m',0.020)">1/50</button><button class="chip" onclick="selSlope(this,'m',0.030)">1/33</button></div>
+        <table class="pt"><thead><tr><th style="font-size:10px;">관경</th><th style="font-size:10px;">용량(L/s)</th><th style="font-size:10px;">개수</th><th style="font-size:10px;">비고</th></tr></thead><tbody id="pt-mh"></tbody></table>
+      </div>
+      <div class="mixed-card"><h3>↓ 수직 낙수관</h3>
+        <div style="font-size:11px;color:#bbb;margin-bottom:8px;">경사 불필요 · 부분 흐름 기준</div>
+        <table class="pt"><thead><tr><th style="font-size:10px;">관경</th><th style="font-size:10px;">용량(L/s)</th><th style="font-size:10px;">개수</th><th style="font-size:10px;">비고</th></tr></thead><tbody id="pt-mv"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="cond-section" id="sec-bent">
+    <div class="info-box">꺾임 수직관 — 수직관과 동일 용량 적용. 꺾임부 국부손실 안전 측으로 무시.</div>
+    <div class="card" style="padding:.875rem 1rem;"><table class="pt"><thead><tr><th>관경</th><th>1개 용량<br><span style="font-size:9px;">(L/s)</span></th><th>필요 개수<br><span style="font-size:9px;">(개)</span></th><th>여유율<br><span style="font-size:9px;">(%)</span></th><th>비고</th></tr></thead><tbody id="pt-b"></tbody></table></div>
+    <div id="warn-b" class="sel-warn" style="display:none;"></div>
+    <div class="sel-box"><div><div class="si-l">선택 관경</div><div class="si-v" id="sb-d">—</div></div><div><div class="si-l">1개 용량</div><div class="si-v" id="sb-q">—</div></div><div><div class="si-l">필요 개수</div><div class="si-v accent" id="sb-n">—</div></div><div><div class="si-l">여유율</div><div class="si-v" id="sb-m">—</div></div></div>
+  </div>
+</div>
+
+<div class="note">
+  ※ 강우강도식: 제주특별자치도 하수도정비 기본계획 (Talbot형). 실제 설계 시 최신 계수 확인 필요.<br>
+  ※ 수직관 용량: KDS 57 60 00, 만관 약 1/3 충만 흐름 기준.<br>
+  ※ 수평관 용량: Manning 공식 만관 기준. 벽면 유효집수면적: H × P × 노출비율.
+</div>
+</div>
+
+<script>
+const ROOFS=[
+  {name:'콘크리트·우레탄 방수',desc:'일반 평지붕 방수층',C:0.90},
+  {name:'아스팔트 시트 방수',desc:'시트 방수 마감',C:0.88},
+  {name:'자갈층 처리',desc:'배수겸용 자갈 포설',C:0.75},
+  {name:'녹화 경량형',desc:'토심 200mm 미만',C:0.40},
+  {name:'녹화 중량형',desc:'토심 200mm 이상, 교목',C:0.25},
+];
+const FP={'10':{a:2108,b:13.0},'30':{a:2916,b:12.0},'50':{a:3294,b:11.5},'100':{a:3785,b:11.2}};
+const PIPES=[75,100,125,150,200,250,300];
+const VERT_Q={75:3.0,100:6.5,125:12.0,150:19.0,200:40.0,250:73.0,300:118.0};
+let st={freq:'30',dur:5,durAuto:true,sys:'vertical',wallOn:false,wallExp:0.25,nh:0.010,Sh:0.010,nm:0.010,Sm:0.020,selV:null,selH:null,selB:null};
+
+(function(){
+  const tb=document.getElementById('roof-tbody');
+  ROOFS.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><div class="rt-name">${r.name}</div><div class="rt-desc">${r.desc}</div></td><td style="text-align:center;"><span class="c-badge">${r.C.toFixed(2)}</span></td><td style="text-align:right;"><input type="number" class="area-in" id="a${i}" value="" min="0" max="999999" step="0.01" placeholder="0.00" oninput="update()"><span class="area-unit"> ㎡</span></td>`;
+    tb.appendChild(tr);
+  });
+})();
+
+function toggleWall(){st.wallOn=!st.wallOn;document.getElementById('wall-toggle').classList.toggle('on',st.wallOn);document.getElementById('wall-body').classList.toggle('visible',st.wallOn);update();}
+function selExp(el,r){document.querySelectorAll('#exp-chips .exp-chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');st.wallExp=r;update();}
+function getWallEffArea(){
+  if(!st.wallOn)return null;
+  const h=parseFloat(document.getElementById('wall-h').value)||0;
+  const p=parseFloat(document.getElementById('wall-p').value)||0;
+  const c=parseFloat(document.getElementById('wall-c').value)||0.80;
+  const r=st.wallExp,eff=h*p*r;
+  document.getElementById('wall-formula-text').textContent=`${h.toFixed(1)}m × ${p.toFixed(1)}m × ${r} = ${eff.toFixed(2)}㎡`;
+  document.getElementById('wall-eff-area').textContent=eff.toFixed(2)+' ㎡';
+  return{eff,c};
+}
+function getAreas(){return ROOFS.map((_,i)=>{const v=parseFloat(document.getElementById('a'+i).value);return(!isNaN(v)&&v>0)?Math.round(v*100)/100:0;});}
+function getTotal(a){const sA=a.reduce((s,v)=>s+v,0),sCA=a.reduce((s,v,i)=>s+ROOFS[i].C*v,0);return{sA,sCA,Cw:sA>0?sCA/sA:0};}
+function getI(f,d){const p=FP[f];return p.a/(d+p.b);}
+function calcQ(sCA,f,d){return(1/360)*getI(f,d)*(sCA/10000);}
+function manQ(D,n,S){const Dm=D/1000,A=Math.PI*Dm*Dm/4,R=Dm/4;return(1/n)*A*Math.pow(R,2/3)*Math.pow(S,0.5)*1000;}
+function selUse(el,f){document.querySelectorAll('#use-chips .chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');st.freq=f;update();}
+function selDur(el,d){document.querySelectorAll('#dur-chips .chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');st.dur=d;st.durAuto=false;update();}
+function selMat(el,g,n){document.querySelectorAll('#mat-'+g+' .chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');g==='h'?st.nh=n:st.nm=n;update();}
+function selSlope(el,g,S){document.querySelectorAll('#slope-'+g+' .chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');g==='h'?st.Sh=S:st.Sm=S;update();}
+function selSys(el,sys){document.querySelectorAll('.sys-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');st.sys=sys;document.querySelectorAll('.cond-section').forEach(s=>s.classList.remove('visible'));document.getElementById('sec-'+sys).classList.add('visible');update();}
+function buildPipeTable(tbodyId,Qs,qFn,selKey,sumIds,warnId){
+  const tbody=document.getElementById(tbodyId);tbody.innerHTML='';
+  let minS=null;for(const D of PIPES){if(qFn(D)>=Qs){minS=D;break;}}
+  if(st[selKey]===null||st[selKey]===undefined)st[selKey]=minS||PIPES[0];
+  PIPES.forEach(D=>{
+    const qp=qFn(D),cnt=Qs>0?Math.ceil(Qs/qp):0,sOk=qp>=Qs,isMin=D===minS,isSel=D===st[selKey];
+    const tot=cnt*qp,margin=Qs>0?((tot-Qs)/Qs*100):0;
+    let tag='',tc='';if(isMin){tag='최소 권장';tc='tag-1ok';}else if(sOk){tag='여유';tc='tag-ok';}else{tag='다수 설치';tc='tag-multi';}
+    const tr=document.createElement('tr');if(isSel)tr.classList.add('selected');
+    tr.onclick=()=>{st[selKey]=D;buildPipeTable(tbodyId,Qs,qFn,selKey,sumIds,warnId);};
+    tr.innerHTML=`<td>φ${D}mm</td><td>${qp.toFixed(2)}</td><td><span class="${sOk?'count-big':'count-warn'}">${cnt}</span>개</td><td>${Qs>0?margin.toFixed(1)+'%':'—'}</td><td><span class="tag ${tc}">${tag}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  if(sumIds){const D=st[selKey],warn=document.getElementById(warnId);
+    if(!D||Qs<=0){sumIds.forEach(id=>document.getElementById(id).textContent='—');if(warn)warn.style.display='none';return;}
+    const qp=qFn(D),cnt=Math.ceil(Qs/qp),tot=cnt*qp,margin=((tot-Qs)/Qs*100),sOk=qp>=Qs;
+    const nEl=document.getElementById(sumIds[2]);
+    document.getElementById(sumIds[0]).textContent='φ'+D+'mm';
+    document.getElementById(sumIds[1]).textContent=qp.toFixed(2)+' L/s';
+    nEl.textContent=cnt+'개';nEl.className='si-v '+(sOk?'accent':'warn');
+    document.getElementById(sumIds[3]).textContent='+'+margin.toFixed(1)+'%';
+    if(warn){if(!sOk){warn.style.display='block';warn.textContent=`⚠ φ${D}mm 1개당 ${qp.toFixed(2)} L/s → 설계유량 ${Qs.toFixed(2)} L/s 처리에 ${cnt}개 병렬 설치 필요. 상위 관경 검토 권장.`;}else warn.style.display='none';}
+  }
+}
+function buildMini(tbodyId,Qs,qFn){
+  const tbody=document.getElementById(tbodyId);tbody.innerHTML='';
+  let minS=null;for(const D of PIPES){if(qFn(D)>=Qs){minS=D;break;}}
+  PIPES.forEach(D=>{
+    const qp=qFn(D),cnt=Qs>0?Math.ceil(Qs/qp):0,sOk=qp>=Qs,isMin=D===minS;
+    let tag='',tc='';if(isMin){tag='최소';tc='tag-1ok';}else if(sOk){tag='여유';tc='tag-ok';}else{tag='다수';tc='tag-multi';}
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:12px;font-weight:500;">φ${D}</td><td style="font-size:12px;">${qp.toFixed(1)}</td><td style="font-size:12px;color:${sOk?'#085041':'#993c1d'};">${cnt}개</td><td><span class="tag ${tc}">${tag}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function autoRecDur(a){return a<=500?5:a<=2000?10:a<=5000?15:30;}
+function update(){
+  const areas=getAreas();const{sA,sCA,Cw}=getTotal(areas);
+  const wR=getWallEffArea();const wallCA=wR?wR.eff*wR.c:0;const totalA=sA+(wR?wR.eff:0);
+  const recD=autoRecDur(totalA);
+  document.querySelectorAll('#dur-chips .chip').forEach(b=>{b.classList.remove('rec');if(parseInt(b.dataset.dur)===recD)b.classList.add('rec');});
+  if(st.durAuto){st.dur=recD;document.querySelectorAll('#dur-chips .chip').forEach(b=>{b.classList.remove('active');if(parseInt(b.dataset.dur)===recD)b.classList.add('active');});
+    document.getElementById('dur-hint').textContent=totalA>0?`↑ 합계 ${totalA.toFixed(2)}㎡ 기준 자동 추천`:'';}
+  document.getElementById('tot-area').textContent=sA.toFixed(2)+' ㎡';
+  document.getElementById('tot-c').textContent=sA>0?'C = '+Cw.toFixed(3):'—';
+  const hasArea=sA>0;
+  document.getElementById('empty-msg').style.display=hasArea?'none':'block';
+  document.getElementById('result-wrap').style.opacity=hasArea?'1':'0.3';
+  document.getElementById('result-wrap').style.pointerEvents=hasArea?'auto':'none';
+  if(!hasArea)return;
+  const{freq,dur,nh,Sh,nm,Sm}=st,p=FP[freq];
+  const I=getI(freq,dur),Qroof=calcQ(sCA,freq,dur),Qwall=wR?calcQ(wallCA,freq,dur):0,Qtot=Qroof+Qwall,Ls=Qtot*1000;
+  document.getElementById('rq').textContent=Qtot.toFixed(4);
+  document.getElementById('rls').textContent=Ls.toFixed(2);
+  document.getElementById('ri').textContent=I.toFixed(1);
+  document.getElementById('fi').textContent=`I=${p.a}/(t+${p.b})=${I.toFixed(1)} mm/hr`;
+  const bb=document.getElementById('breakdown-box');
+  if(st.wallOn&&Qwall>0){bb.style.display='block';const rp=Math.round(Qroof/Qtot*100),wp=100-rp;
+    document.getElementById('bd-roof-bar').style.width=rp+'%';document.getElementById('bd-wall-bar').style.width=wp+'%';
+    document.getElementById('bd-roof-pct').textContent=rp+'%';document.getElementById('bd-wall-pct').textContent=wp+'%';
+    document.getElementById('bd-roof-ls').textContent=(Qroof*1000).toFixed(2);document.getElementById('bd-wall-ls').textContent=(Qwall*1000).toFixed(2);
+  }else bb.style.display='none';
+  const vFn=D=>VERT_Q[D],hFn=D=>manQ(D,nh,Sh),mhFn=D=>manQ(D,nm,Sm);
+  buildPipeTable('pt-v',Ls,vFn,'selV',['sv-d','sv-q','sv-n','sv-m'],'warn-v');
+  buildPipeTable('pt-h',Ls,hFn,'selH',['sh-d','sh-q','sh-n','sh-m'],'warn-h');
+  buildPipeTable('pt-b',Ls,vFn,'selB',['sb-d','sb-q','sb-n','sb-m'],'warn-b');
+  buildMini('pt-mh',Ls,mhFn);buildMini('pt-mv',Ls,vFn);
+}
+update();
+</script>
+</body>
+</html>
