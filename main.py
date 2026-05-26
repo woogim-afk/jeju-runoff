@@ -9,6 +9,7 @@ app = FastAPI()
 # ── 환경변수로 허용 블로그 도메인 설정 ──────────────────────────────
 # Railway 환경변수에 ALLOWED_BLOG 를 설정하세요 (예: myblog.tistory.com)
 ALLOWED_BLOG = os.environ.get("ALLOWED_BLOG", "").strip().lower()
+print(f"[startup] ALLOWED_BLOG={ALLOWED_BLOG!r}")
 
 def is_allowed(request: Request) -> bool:
     """Referer 또는 Origin 헤더가 허용 블로그 도메인인지 확인"""
